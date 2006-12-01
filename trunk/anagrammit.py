@@ -1,6 +1,9 @@
-# An anagram generator using a recursive function.
-# Created by: Adam Bachman
-# Current: 1 December 2006
+""" anagrammit.py
+An anagram generator using a recursive function.
+Created by: Adam Bachman
+Current: 1 December 2006
+Project notes at [bachman.infogami.com](http://bachman.infogami.com/anagrammer)
+"""
 
 from time import time
 import sys
@@ -16,6 +19,8 @@ LEX_GEN = 0
 
     
 def letterFrequency(instr):
+    """ Create a letter frequency dictionary for a given word.  This function
+    is only run through the dictionary once. """
     d = {}
     for l in instr:
         d[l]=instr.count(l)
@@ -23,7 +28,7 @@ def letterFrequency(instr):
 
 #####################  LEXICON FUNCTION  #######################        
 def createOrigLex(lexi,inpt):
-    '''generate lexicon'''
+    """ generate initial lexicon """
     new_dict = []
     for word in lexi:
         bad = False
@@ -67,16 +72,16 @@ def createLexicon(lexi, inpt, reqs=None):
 ## The main program loop, it calls itself once for every new word in
 ## an anagram.  That means if a particular anagram has eight words, 
 ## our max recursion depth is eight.
-def MainLoop(lexi, inpt, rslt, temp_rslt=[]):
-    count = 0
+def mainloop(lexi, inpt, rslt, temp_rslt=[]):
+    count = 0 # to remember where in the list we are.
     for next_word in lexi:
-        ## counter to remember where in the list we are.
         count += 1 
-        ##append the first word in the lexicon to temp_rslt
+
         temp_rslt.append(next_word[0])
-        ##update the input string
+
         for x in next_word[1]:
             inpt[x] -= next_word[1][x]
+
         if sum(inpt.values()) == 0:
             ## Branch A
             ## Empty new input, full old lexicon.  We've got a winner!  
@@ -84,26 +89,19 @@ def MainLoop(lexi, inpt, rslt, temp_rslt=[]):
             if rslt[0] % 1000 == 0:
                 print rslt[0]
             rslt.append(' '.join(temp_rslt))
-            ## get rid of the word most recently used from old lexicon 
-            ## and temp_rslt.
             for l in temp_rslt.pop():
                 inpt[l] += 1
         else:
-            ## Full new input, full old lexicon.  Make a new lexicon.
             temp_lexi = createLexicon(lexi[count:], inpt)
             if len(temp_lexi) == 0:
                 ## Branch B
                 ## Full new input, empty new lexicon.                 
-                ## get rid of the word most recently used from old 
-                ## lexicon and temp_rslt.
                 for l in temp_rslt.pop():
                     inpt[l] += 1
             else:
                 ## Branch C
                 ## Full new input, full new lexicon. Go down one level
-                MainLoop(temp_lexi, inpt, rslt, temp_rslt)
-                ## get rid of the word most recently used from 
-                ## temp_rslt.
+                mainloop(temp_lexi, inpt, rslt, temp_rslt)
                 for l in temp_rslt.pop():
                     inpt[l] += 1
 
@@ -113,13 +111,16 @@ def main(pre_inpt):
     result = [0]
     dictionary = createOrigLex(
                   [x.strip() for x in open('dictionary.txt')],inpt)
-    MainLoop(dictionary,inpt,result)
+    mainloop(dictionary,inpt,result)
     return result[0], result[1:]
 
 if __name__=="__main__":    
     # Prompt for input
     inpt = raw_input("Enter the phrase to be anagrammed: ")
     inpt = ''.join([l for l in inpt.lower() if l.isalpha()])
+
+    # Or run straight away
+    #inpt = "puresoapunion"
 
     # Time the run
     start = time()

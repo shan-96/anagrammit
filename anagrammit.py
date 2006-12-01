@@ -1,25 +1,20 @@
-##-----  Here begins the program  -----##
 # An anagram generator using a recursive function.
 # Created by: Adam Bachman
-# Date: October 2005
-# Update: Oct-13-2005
-#   -removed regular expressions from the lexicon builder.
-# Update: Nov-15 - Nov-20 
-#   -numerous optimizations, including createLexicon improvements 
-#     and refactoring to remove recursion. (but I added it back)
-#   -very few strings, mostly letter dictionaries
-#   -input is a letter frequency dict exclusively.
+# Current: 1 December 2006
 
 from time import time
-import psyco
 import sys
 
-psyco.full()
-#psyco.log()
-#psyco.profile()
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    pass # Sorry, no optimizations for you.
 
-#createCount = 0
+WORD_CHECK = 0
+LEX_GEN = 0 
 
+    
 def letterFrequency(instr):
     d = {}
     for l in instr:
@@ -46,12 +41,13 @@ def createOrigLex(lexi,inpt):
             new_dict.append((word, letterFrequency(word)))
     return new_dict
 
-def createLexicon(lexi, inpt):
-#    global createCount 
-#    createCount += 1
+def createLexicon(lexi, inpt, reqs=None):
     '''generate lexicon'''
+    global WORD_CHECK, LEX_GEN
+    LEX_GEN += 1
     new_dict = []
     for word in lexi:
+        WORD_CHECK += 1
         bad = False
         for l in word[1]: 
             # if it doesn't have too many of any particular letter and 
@@ -111,33 +107,45 @@ def MainLoop(lexi, inpt, rslt, temp_rslt=[]):
                 for l in temp_rslt.pop():
                     inpt[l] += 1
 
-def Main(pre_inpt):
+def main(pre_inpt):
     inpt = letterFrequency(pre_inpt)
 
     result = [0]
     dictionary = createOrigLex(
                   [x.strip() for x in open('dictionary.txt')],inpt)
     MainLoop(dictionary,inpt,result)
-    return result       
+    return result[0], result[1:]
 
 if __name__=="__main__":    
-    inpt = "wellpunchmeintheface"
-    #res_file = file('onebig_results','w')
-    #inpt = raw_input("Enter the phrase to be anagrammed: ")
-    #inpt = ''.join([l for l in inpt.lower() if l.isalpha()])
-    s = time()
-    result = Main(inpt)
-    f = time()
-    print "%f seconds used."%(f-s)
-    print "DONE TESTING"
-    print "%i results found"%len(result)
-#    for x in result:
-#        res_file.write("%s\n"%x)
-#    res_file.write("%f seconds used."%f-s)
-#    res_file.write("DONE TESTING")
-#    res_file.write("%i results found"%len(result))
-#    for x in result[0:10]: print x
-#    for x in result[-10:]: print x      
-#    res_file.close()
+    # Prompt for input
+    inpt = raw_input("Enter the phrase to be anagrammed: ")
+    inpt = ''.join([l for l in inpt.lower() if l.isalpha()])
 
-#    print "createLexicon was run",createCount,"times."
+    # Time the run
+    start = time()
+    r_quant, results = main(inpt)
+    finish = time()
+    total = finish - start
+    
+    # Display stats
+    print "   ", "-" * 20
+    print "    input = %s" % inpt
+    print "    results = %i" % r_quant
+    print "    lexicon generations = %i" % LEX_GEN
+    print "    word checks = %i" % WORD_CHECK
+    print "    running time = %f" % total
+    print "    "
+    print "    res / sec = %f" % (r_quant / total)
+    print "    lexgen / res = %i" % (r_quant != 0 and (LEX_GEN / r_quant) or 0)
+    print "    wdchk / res = %i" % (r_quant != 0 and (WORD_CHECK / r_quant) or 0)
+    print "   ", "-" * 20
+        
+    # Save to file
+    print "Saving to '%s_results.txt'" % inpt
+    f = file("%s_results.txt" % inpt, 'w')
+    for res in results:
+        print >> f, res
+
+    f.write("%s seconds used." % total)
+    f.write("%i results found" % r_quant)
+    f.close()

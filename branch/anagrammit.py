@@ -288,7 +288,7 @@ def sample_singlethreaded():
 
 def sample_multithreaded():
     inpt = "wellpunchmeintheface"
-    com = monitored(inpt)
+    (com, _) = monitored(inpt)
     sleep(2)    
     print com.progress(), '(monitored)'
     sleep(2)

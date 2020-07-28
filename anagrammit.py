@@ -1,8 +1,5 @@
 """ anagrammit.py
 An anagram generator using a recursive function.
-Created by: Adam Bachman
-Current: 1 December 2006
-Project notes at [bachman.infogami.com](http://bachman.infogami.com/anagrammer)
 """
 
 from time import time
